@@ -1,0 +1,51 @@
+default_language_version:
+  # force all unspecified python hooks to run python3
+  python: python3
+repos:
+  - repo: https://github.com/PyCQA/modernize
+    rev: v0.8.0
+    hooks:
+      - id: modernize # ensure code compatibility between both python 2 & 3
+        args:
+          [
+            --write,
+            --nobackups,
+            --no-diffs,
+            --fix=default,
+            --fix=idioms,
+            --fix=set_literal,
+          ]
+
+  - repo: https://github.com/ambv/black
+    rev: 24.2.0
+    hooks:
+      - id: black # Formatter for Python
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace # Trim any trailing whitespace from lines
+      - id: end-of-file-fixer # Ensures that a file is either empty, or ends with one newline
+      - id: check-merge-conflict # Check for files that contain merge conflict strings
+      - id: check-json # JSON Syntax Check
+      - id: check-toml # TOML Syntax Check
+      - id: check-yaml # YAML Syntax Check
+      - id: fix-byte-order-marker # Eliminate useless BOM from utf-8 files
+      - id: fix-encoding-pragma # Ensure files have correct utf-8 coding pragma
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.5
+    hooks:
+      - id: isort
+        name: isort (python)
+      - id: isort
+        name: isort (cython)
+        types: [cython]
+      - id: isort
+        name: isort (pyi)
+        types: [pyi]
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.2.1
+    hooks:
+      - id: prettier # Formatter for JavaScript
