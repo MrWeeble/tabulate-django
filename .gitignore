@@ -1,1 +1,4 @@
 dist
+.tox
+*.pyx
+__pycache__

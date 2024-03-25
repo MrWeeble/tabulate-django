@@ -4,9 +4,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import json
 
 import six
-from django.contrib.postgres.aggregates import ArrayAgg, StringAgg
+
+try:
+    from django.contrib.postgres.aggregates import ArrayAgg, StringAgg
+except ImportError:
+
+    def NoPostgres(*args, **kwargs):
+        raise NotImplementedError("Postgres not installed")
+
+    ArrayAgg = StringAgg = NoPostgres
 from django.db import models
-from django.db.models import Count, Expression, Max, Min, Value
+from django.db.models import Avg, Count, Expression, Max, Min, Sum, Value
 from django.db.models.functions import Cast, Concat
 from tabulate import tabulate
 
@@ -64,22 +72,32 @@ def stringify(value):
 aggregate_functions = {
     "[]": {"function": ArrayAgg, "name": "list"},
     "*": {"function": StringAgg, "name": "group", "kwargs": {"delimiter": ", "}},
-    "+": {"function": Count, "name": "count"},
+    "#": {"function": Count, "name": "count"},
     "^": {"function": Max, "name": "max"},
     "_": {"function": Min, "name": "max"},
+    "+": {"function": Sum, "name": "sum"},
+    "~": {"function": Avg, "name": "sum"},
 }
 
 
 def queryset_table(
-    queryset, fields, table_format="fancy_grid", output=False, filter=None, slice=None
+    queryset,
+    fields,
+    table_format="fancy_grid",
+    print_result=True,
+    filter=None,
+    slice=None,
+    show_keys=False,
 ):
     groups = {}
     headers = []
     for index, field in enumerate(fields):
+        key = field
         header = None
         if isinstance(field, tuple):
             field, header = field
             fields[index] = field
+            key = field
 
         if isinstance(field, Expression):
             if not header:
@@ -106,6 +124,8 @@ def queryset_table(
                         groups[key] = func["function"](field, **func.get("kwargs", {}))
         else:
             raise ValueError("Field must be a string or expression")
+        if show_keys:
+            header = "{} ({})".format(header, key)
         headers.append(header)
     if not filter:
         filter = {}
@@ -123,13 +143,16 @@ def queryset_table(
             headers=headers,
             tablefmt=table_format,
         )
-    if output:
-        return table
-    else:
+
+    if print_result:
         print(table)
+    else:
+        return table
 
 
-def instance_table(instance, private=False, table_format="fancy_grid", output=False):
+def instance_table(
+    instance, private=False, table_format="fancy_grid", print_result=True
+):
     table = tabulate(
         (
             (key, stringify(value))
@@ -138,7 +161,7 @@ def instance_table(instance, private=False, table_format="fancy_grid", output=Fa
         ),
         tablefmt=table_format,
     )
-    if output:
-        return table
-    else:
+    if print_result:
         print(table)
+    else:
+        return table
