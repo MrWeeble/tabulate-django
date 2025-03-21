@@ -12,18 +12,18 @@ When using Django, I often need to drop to the shell to retrieve information. In
 cases I will usually look at the result of a QuerySet, the default output of which is
 not particularly useful. I tended to use `.values()` to extract the fields that I
 wanted and then pass them into the excellent tabulate library. I would often make the
-same calls over an over and ended up creating avoid repetition. Over time this function
-grew in size and capabilities.
+same calls over an over and ended up creating functions to avoid repetition. Over time
+these functions grew in size and capabilities.
 
 In order to make it easy to put into any codebase I am working on, I decided to publish
-it on PyPI, with the added bonus of making it available for other users
+it on PyPI, with the added bonus of making it available for other users.
 
 My motivation is primarily my own needs, so I won't commit to adding any features that
 would not be of use to me, however PRs are welcome.
 
 ## Licence
 
-This software is licenced under the MIT licence
+This software is licensed under the MIT licence
 
 ## Installation
 
@@ -36,7 +36,7 @@ pip install tabulate-django
 or use the package manager of your choice
 
 This version supports Python 2.7, however compatibility may be removed in a future
-release (basically when I stop developing anything under 2.7)
+release as I no longer code for Python 2.7
 
 ## Usage
 
@@ -209,12 +209,15 @@ These are accessed by preceding the field (or table) name with a symbol
 | Function  | Symbol | Notes                                |
 | --------- | ------ | ------------------------------------ |
 | Count     | `#`    |                                      |
+| Count     | `1#`   | with distinct=True                   |
 | Min       | `_`    |                                      |
 | Max       | `^`    |                                      |
 | Sum       | `+`    |                                      |
 | Average   | `~`    |                                      |
 | StringAgg | `*`    | Postgres only - used for strings     |
+| StringAgg | `1*`   | as above, with distinct=True         |
 | ArrayAgg  | `[]`   | Postgres only - used for non-strings |
+| ArrayAgg  | `1[]`  | as above, with distinct=True         |
 
 e.g
 
@@ -407,3 +410,17 @@ members, pass `private=True` to the function.
 
 `print_result` and `table_format` parameters have the same meaning as in queryset_table
 however the special tsv value for table_format is not available
+
+# Contributing
+
+Contributions are welcome, please open an issue or PR on the
+[GitHub repository](https://github.com/MrWeeble/tabulate-django)
+
+Local installation should be as simple as checking out the code nad running
+`poetry install`
+
+Tests can be run in all combinations of supported environments with the command
+`poetry run tox`
+
+Code formatting and standards are enforced use [pre-commit](https://pre-commit.com/).
+Please ensure PRs pass all checks.

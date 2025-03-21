@@ -5,7 +5,7 @@ from django.db.models import Count, Sum
 from django.test import TestCase
 
 from tabulate_django import queryset_table
-from test_app.models import Account, Country, Order
+from test_app.models import Account, Country, Order, OrderItem, Product
 
 
 class BasicTestCase(TestCase):
@@ -32,22 +32,118 @@ class BasicTestCase(TestCase):
         francoise = Account.objects.create(
             name="Francois Michel", email="francois.michel@example.fr", country=france
         )
-        Order.objects.create(account=alice, order_date="2021-01-01", order_total=10.00)
-        Order.objects.create(account=alice, order_date="2021-02-01", order_total=15.00)
-        Order.objects.create(account=alice, order_date="2021-03-01", order_total=20.00)
-        Order.objects.create(account=bob, order_date="2021-01-10", order_total=250.00)
-        Order.objects.create(
+        widget = Product.objects.create(name="Widget", price=5.00)
+        thing = Product.objects.create(name="Thing", price=2.50)
+        wotsit = Product.objects.create(name="Wotsit", price=20.00)
+        alice_order_1 = Order.objects.create(
+            account=alice, order_date="2021-01-01", order_total=10.00
+        )
+        OrderItem.objects.create(
+            order=alice_order_1, product=widget, quantity=2, total_price=10.00
+        )
+        alice_order_2 = Order.objects.create(
+            account=alice, order_date="2021-02-01", order_total=15.00
+        )
+        OrderItem.objects.create(
+            order=alice_order_2,
+            product=widget,
+            quantity=2,
+            total_price=10.00,
+        )
+        OrderItem.objects.create(
+            order=alice_order_2,
+            product=thing,
+            quantity=2,
+            total_price=5.00,
+        )
+        alice_order_3 = Order.objects.create(
+            account=alice, order_date="2021-03-01", order_total=20.00
+        )
+        OrderItem.objects.create(
+            order=alice_order_3,
+            product=widget,
+            quantity=3,
+            total_price=15.00,
+        )
+        OrderItem.objects.create(
+            order=alice_order_3,
+            product=widget,
+            quantity=2,
+            total_price=5.00,
+        )
+
+        bob_order_1 = Order.objects.create(
+            account=bob, order_date="2021-01-10", order_total=250.00
+        )
+        OrderItem.objects.create(
+            order=bob_order_1,
+            product=widget,
+            quantity=2,
+            total_price=10.00,
+        )
+        OrderItem.objects.create(
+            order=bob_order_1,
+            product=wotsit,
+            quantity=11,
+            total_price=220.00,
+        )
+
+        charlotte_order_1 = Order.objects.create(
             account=charlotte, order_date="2021-02-10", order_total=10.00
         )
-        Order.objects.create(
+        OrderItem.objects.create(
+            order=charlotte_order_1,
+            product=widget,
+            quantity=1,
+            total_price=5.00,
+        )
+        OrderItem.objects.create(
+            order=charlotte_order_1,
+            product=thing,
+            quantity=2,
+            total_price=5.00,
+        )
+        dietrich_order_1 = Order.objects.create(
             account=dietrich, order_date="2021-02-02", order_total=200.00
         )
-        Order.objects.create(
+        OrderItem.objects.create(
+            order=dietrich_order_1,
+            product=wotsit,
+            quantity=10,
+            total_price=200.00,
+        )
+        dietrich_order_2 = Order.objects.create(
             account=dietrich, order_date="2021-02-02", order_total=100.00
         )
-        Order.objects.create(account=eva, order_date="2021-03-10", order_total=220.00)
-        Order.objects.create(
+        OrderItem.objects.create(
+            order=dietrich_order_2,
+            product=widget,
+            quantity=4,
+            total_price=20.00,
+        )
+        OrderItem.objects.create(
+            order=dietrich_order_2,
+            product=wotsit,
+            quantity=4,
+            total_price=8.00,
+        )
+        eva_order_1 = Order.objects.create(
+            account=eva, order_date="2021-03-10", order_total=220.00
+        )
+        OrderItem.objects.create(
+            order=eva_order_1,
+            product=thing,
+            quantity=88,
+            total_price=220.00,
+        )
+        francoise_order_1 = Order.objects.create(
             account=francoise, order_date="2021-01-15", order_total=220.00
+        )
+        OrderItem.objects.create(
+            order=francoise_order_1,
+            product=thing,
+            quantity=88,
+            total_price=220.00,
         )
 
     def test_output_account_fields(self):
@@ -324,4 +420,26 @@ Dietrich Schmidt	dschmidt@example.de
 Eva Dupont	eva@dupont.example
 Francois Michel	francois.michel@example.fr
 """.strip()
+        self.assertEqual(expected, table)
+
+    def test_distinct_aggregate_functions(self):
+        all_products = Product.objects.order_by("name")
+        table = queryset_table(
+            all_products,
+            [
+                "name",
+                ("1#orderitem__order__account__country", "Countries"),
+            ],
+            print_result=False,
+        )
+        expected = """
+╒════════╤═════════════╕
+│ Name   │   Countries │
+╞════════╪═════════════╡
+│ Thing  │           3 │
+├────────┼─────────────┤
+│ Widget │           2 │
+├────────┼─────────────┤
+│ Wotsit │           2 │
+╘════════╧═════════════╛""".strip()
         self.assertEqual(expected, table)

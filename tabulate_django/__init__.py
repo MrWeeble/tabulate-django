@@ -71,8 +71,15 @@ def stringify(value):
 
 aggregate_functions = {
     "[]": {"function": ArrayAgg, "name": "list"},
+    "1[]": {"function": ArrayAgg, "name": "list", "kwargs": {"distinct": True}},
     "*": {"function": StringAgg, "name": "group", "kwargs": {"delimiter": ", "}},
+    "1*": {
+        "function": StringAgg,
+        "name": "group",
+        "kwargs": {"delimiter": ", ", "distinct": True},
+    },
     "#": {"function": Count, "name": "count"},
+    "1#": {"function": Count, "name": "count", "kwargs": {"distinct": True}},
     "^": {"function": Max, "name": "max"},
     "_": {"function": Min, "name": "max"},
     "+": {"function": Sum, "name": "sum"},
